@@ -7,17 +7,20 @@
 //  
   
 #import "HYBPhotoPickerManager.h"  
-#import "UIImagePickerController+Photo.h"  
-#import "UIImage+DSResizeAndRound.h"  
-  
+//#import "UIImagePickerController+Photo.h"
+//#import "UIImage+DSResizeAndRound.h"
+
+
+
 @interface HYBPhotoPickerManager () <UIImagePickerControllerDelegate,  
 UINavigationControllerDelegate,  
 UIActionSheetDelegate>  
   
 @property (nonatomic, weak)     UIViewController          *fromController;  
 @property (nonatomic, copy)     HYBPickerCompelitionBlock completion;  
-@property (nonatomic, copy)     HYBPickerCancelBlock      cancelBlock;  
-  
+@property (nonatomic, copy)     HYBPickerCancelBlock      cancelBlock;
+@property (nonatomic, assign)   BOOL      allowEdit;
+
 @end  
   
 @implementation HYBPhotoPickerManager  
@@ -36,30 +39,32 @@ UIActionSheetDelegate>
 }  
   
 - (void)showActionSheetInView:(UIView *)inView  
-               fromController:(UIViewController *)fromController  
+               fromController:(UIViewController *)fromController
+                    allowEdit:(BOOL)allowEdit
                    completion:(HYBPickerCompelitionBlock)completion  
                   cancelBlock:(HYBPickerCancelBlock)cancelBlock {  
   self.completion = [completion copy];  
   self.cancelBlock = [cancelBlock copy];  
-  self.fromController = fromController;  
+    self.fromController = fromController;
+    self.allowEdit = allowEdit;
     
-  dispatch_async(kGlobalThread, ^{  
+  dispatch_async(dispatch_get_main_queue(), ^{
     UIActionSheet *actionSheet = nil;  
-    if ([UIImagePickerController isCameraAvailable]) {  
+    if ([UIImagePickerController isCameraDeviceAvailable:UIImagePickerControllerCameraDeviceRear]) {
       actionSheet  = [[UIActionSheet alloc] initWithTitle:nil  
                                                  delegate:(id<UIActionSheetDelegate>)self  
                                         cancelButtonTitle:@"取消"  
                                    destructiveButtonTitle:nil  
-                                        otherButtonTitles:@"从相册选择", @"拍照上传", nil nil];  
+                                        otherButtonTitles:@"从相册选择", @"拍照上传", nil ];
     } else {  
       actionSheet = [[UIActionSheet alloc] initWithTitle:nil  
                                                 delegate:(id<UIActionSheetDelegate>)self  
                                        cancelButtonTitle:@"取消"  
                                   destructiveButtonTitle:nil  
-                                       otherButtonTitles:@"从相册选择", nil nil];  
+                                       otherButtonTitles:@"从相册选择", nil ];
     }  
       
-    dispatch_async(kMainThread, ^{  
+    dispatch_async(dispatch_get_main_queue(), ^{
       [actionSheet showInView:inView];  
     });  
   });  
@@ -70,13 +75,14 @@ UIActionSheetDelegate>
 #pragma mark - UIActionSheetDelegate  
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {  
   if (buttonIndex == 0) { // 从相册选择  
-    if ([UIImagePickerController isPhotoLibraryAvailable]) {  
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
       UIImagePickerController *picker = [[UIImagePickerController alloc] init];  
       picker.delegate = self;  
       picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;  
       picker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:picker.sourceType];  
+        picker.allowsEditing =self.allowEdit;
         
-      if (kIsIOS7OrLater) {  
+      if ([[UIDevice currentDevice].systemVersion floatValue]>=7.0) {
         picker.navigationBar.barTintColor = self.fromController.navigationController.navigationBar.barTintColor;  
       }  
       // 设置导航默认标题的颜色及字体大小  
@@ -85,13 +91,15 @@ UIActionSheetDelegate>
       [self.fromController presentViewController:picker animated:YES completion:nil];  
     }  
   } else if (buttonIndex == 1) { // 拍照  
-    if ([UIImagePickerController canTakePhoto]) {  
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
       UIImagePickerController *picker = [[UIImagePickerController alloc] init];  
       picker.delegate = self;  
       picker.sourceType = UIImagePickerControllerSourceTypeCamera;  
       picker.delegate = self;  
-      if (kIsIOS7OrLater) {  
-        picker.navigationBar.barTintColor = self.fromController.navigationController.navigationBar.barTintColor;  
+        picker.allowsEditing =self.allowEdit;
+        
+      if ([[UIDevice currentDevice].systemVersion floatValue]>=7.0) {
+        picker.navigationBar.barTintColor = self.fromController.navigationController.navigationBar.barTintColor;
       }  
       // 设置导航默认标题的颜色及字体大小  
       picker.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor],  
@@ -108,15 +116,20 @@ UIActionSheetDelegate>
   [aPicker dismissViewControllerAnimated:YES completion:nil];  
   __block UIImage *image = [info valueForKey:UIImagePickerControllerOriginalImage];  
     
+    if(self.allowEdit){
+        image = [info valueForKey:UIImagePickerControllerEditedImage];
+        
+    }
+    
   if (image && self.completion) {  
     [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];  
     [self.fromController setNeedsStatusBarAppearanceUpdate];  
       
-    dispatch_async(kGlobalThread, ^{  
-      image = [image imageResizedToSize:CGSizeMake(kScreenWidth / 2.0, kScreenHeight / 2.0)];  
-      DDLogVerbose(@"image size : %@", NSStringFromCGSize(image.size));  
+    dispatch_async(dispatch_get_main_queue(), ^{
+//      image = [image imageResizedToSize:CGSizeMake(kScreenWidth / 2.0, kScreenHeight / 2.0)];  
+//      DDLogVerbose(@"image size : %@", NSStringFromCGSize(image.size));
         
-      dispatch_async(kMainThread, ^{  
+      dispatch_async(dispatch_get_main_queue(), ^{
         self.completion(image);  
       });  
     });  

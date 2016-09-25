@@ -36,7 +36,8 @@ typedef void (^HYBPickerCancelBlock)();
  * @param cancelBlock 当用户点击取消后，回调cancelBlock 
  */  
 - (void)showActionSheetInView:(UIView *)inView  
-               fromController:(UIViewController *)fromController  
+               fromController:(UIViewController *)fromController
+                    allowEdit:(BOOL)allowEdit
                    completion:(HYBPickerCompelitionBlock)completion  
                   cancelBlock:(HYBPickerCancelBlock)cancelBlock;  
   

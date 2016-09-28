@@ -73,40 +73,46 @@ UIActionSheetDelegate>
 }  
   
 #pragma mark - UIActionSheetDelegate  
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {  
-  if (buttonIndex == 0) { // 从相册选择  
-    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
-      UIImagePickerController *picker = [[UIImagePickerController alloc] init];  
-      picker.delegate = self;  
-      picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;  
-      picker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:picker.sourceType];  
-        picker.allowsEditing =self.allowEdit;
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+   
+    dispatch_async(dispatch_get_main_queue(), ^{
         
-      if ([[UIDevice currentDevice].systemVersion floatValue]>=7.0) {
-        picker.navigationBar.barTintColor = self.fromController.navigationController.navigationBar.barTintColor;  
-      }  
-      // 设置导航默认标题的颜色及字体大小  
-      picker.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor],  
-                                                   NSFontAttributeName : [UIFont boldSystemFontOfSize:18]};  
-      [self.fromController presentViewController:picker animated:YES completion:nil];  
-    }  
-  } else if (buttonIndex == 1) { // 拍照  
-    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
-      UIImagePickerController *picker = [[UIImagePickerController alloc] init];  
-      picker.delegate = self;  
-      picker.sourceType = UIImagePickerControllerSourceTypeCamera;  
-      picker.delegate = self;  
-        picker.allowsEditing =self.allowEdit;
-        
-      if ([[UIDevice currentDevice].systemVersion floatValue]>=7.0) {
-        picker.navigationBar.barTintColor = self.fromController.navigationController.navigationBar.barTintColor;
-      }  
-      // 设置导航默认标题的颜色及字体大小  
-      picker.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor],  
-                                                   NSFontAttributeName : [UIFont boldSystemFontOfSize:18]};  
-      [self.fromController presentViewController:picker animated:YES completion:nil];  
-    }  
-  }  
+        if (buttonIndex == 0) { // 从相册选择
+            if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
+                UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+                picker.delegate = self;
+                picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+                picker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:picker.sourceType];
+                picker.allowsEditing =self.allowEdit;
+                
+                if ([[UIDevice currentDevice].systemVersion floatValue]>=7.0) {
+                    picker.navigationBar.barTintColor = self.fromController.navigationController.navigationBar.barTintColor;
+                }
+                // 设置导航默认标题的颜色及字体大小
+                picker.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor],
+                                                             NSFontAttributeName : [UIFont boldSystemFontOfSize:18]};
+                [self.fromController presentViewController:picker animated:YES completion:nil];
+            }
+        } else if (buttonIndex == 1) { // 拍照
+            if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+                picker.delegate = self;
+                picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+                picker.delegate = self;
+                picker.allowsEditing =self.allowEdit;
+                
+                if ([[UIDevice currentDevice].systemVersion floatValue]>=7.0) {
+                    picker.navigationBar.barTintColor = self.fromController.navigationController.navigationBar.barTintColor;
+                }
+                // 设置导航默认标题的颜色及字体大小
+                picker.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor],
+                                                             NSFontAttributeName : [UIFont boldSystemFontOfSize:18]};  
+                [self.fromController presentViewController:picker animated:YES completion:nil];  
+            }  
+        }
+    });
+    
+    
   return;  
 }  
   
